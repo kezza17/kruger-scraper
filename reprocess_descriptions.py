@@ -1,14 +1,11 @@
 import pandas as pd
-from openpyxl import load_workbook
 from parse_tweet import extract_description_fields
 
-def reprocess_unknown_descriptions(filename="tweets_output.xlsx"):
-    sheet_name = "scraped_data"
-
+def reprocess_unknown_descriptions(filename="tweets_output.csv"):
     try:
-        df = pd.read_excel(filename, sheet_name=sheet_name)
+        df = pd.read_csv(filename)
         if "descr_unknown" not in df.columns or "text_raw_descr" not in df.columns:
-            print("❌ Required columns not found in the Excel file.")
+            print("❌ Required columns not found in the CSV file.")
             return
 
         df['id'] = df['id'].astype(str).str.strip()
@@ -30,17 +27,14 @@ def reprocess_unknown_descriptions(filename="tweets_output.xlsx"):
             df.at[idx, "descr_activity"] = parsed.get("activity")
             df.at[idx, "descr_unknown"] = ", ".join(parsed.get("unknown", []))
 
-        # ✅ Preserve other sheets when saving
-        with pd.ExcelWriter(filename, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-        print(f"✅ Updated {filename} with reprocessed description fields (only '{sheet_name}' updated).")
+        # ✅ Save to CSV (overwrites original)
+        df.to_csv(filename, index=False)
+        print(f"✅ Updated {filename} with reprocessed description fields.")
 
     except FileNotFoundError:
         print(f"❌ File '{filename}' not found.")
     except Exception as e:
         print(f"⚠️ Error during processing: {e}")
-
 
 if __name__ == "__main__":
     reprocess_unknown_descriptions()

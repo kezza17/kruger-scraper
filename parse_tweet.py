@@ -1,6 +1,32 @@
 import re
 from parse_location import parse_location
 from parse_description import extract_description_fields
+from text_utils import find_phrase
+
+areas = {
+    "Crocodile Bridge": ["Crocodile Bridge Gate", "Crocode Bridge", "Crocodile Birgde", "Crocodile  Bridge", "Crocodiel Bridge", "Crocodile Bridge"], 
+    "Satara": ["Satara Camp", "Stara", "Satara"], 
+    "Malelane": ["Malelane gate", "Malelane"], 
+    "Orpen": ["Opren", "Orpen"], 
+    "Pretoriuskop": ["Pertoriuskop", "Pretroriuskop", "Pretoriuskop"], 
+    "Skukuza": ["Skukuz", "Skukua", "Skukuza"], 
+    "Afsaal": ["Afsaal"], 
+    "Olifants": ["Olifants camp", "Olifants"], 
+    "Punda Maria": ["Punda Maria"], 
+    "Phabeni": ["Phabeni Gate", "Phabeni"], 
+    "Letaba": ["Letaba Camp", "Letaba"], 
+    "Tshokwane": ["Thokwane", "Tshowakne", "Tshokwane"],
+    "Berg En Dal": ["Berg en dal", "Berg en Dal"], 
+    "Paul Kruger Gate": ["Pual Kruger Gate", "the Paul Kruger Gate", "Paul Kruger Gate"], 
+    "Phalaborwa": ["Phalaborwa"], 
+    "Mopani": ["Mopani"], 
+    "Shingwedzi": ["Shindwedzi", "Shingwedzi"], 
+    "Biyamiti": ["Biyamit Bush Camp", "Biyamiti Camp", "Biyamiti Bush Camp", "Biyamiti"], 
+    "Numbi": ["Numbi Gate", "Numbi"], 
+    "Jock Safari Lodge": ["Jock Safaril Lodge", "Jock Safari", "Jock Safari Lodge"], 
+    "Pafuri": ["Pafuri gate", "Pafuri"], 
+    "Lower Sabie": ["LS", "Lower Sabie"]
+}
 
 def parse_tweet_text(text):
     lines = [line.strip() for line in text.strip().split("\n") if line.strip()]
@@ -40,10 +66,12 @@ def parse_tweet_text(text):
               result["location"] = parse_location(line)
               continue
 
-          # Area (starts with "Near")
+          # Area (starts with "Near")          
           if result["area"] is None and line.lower().startswith("near "):
-              result["area"] = line[5:].strip()
-              continue
+            possible_area = line[5:].strip()
+            area_key, matched_phrase = find_phrase(areas, possible_area)
+            result["area"] = area_key or possible_area  # fallback to raw area text
+            continue
 
           # Rating (e.g. 4/5)
           if result["rating"] is None and re.match(r"^\d+/5$", line):
@@ -63,4 +91,3 @@ def parse_tweet_text(text):
               result["descr"] = extract_description_fields(line)
 
     return result
-

@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 from parse_tweet import parse_tweet_text
 from urllib.parse import quote
 
-from export import export_to_excel
+from export import export_to_csv
 from check_data_dates import analyse_date_ranges
 from dotenv import load_dotenv
 import os
@@ -14,10 +14,10 @@ load_dotenv()
 
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 MAX_ROLLS = 1000
-OVERWRITE = False
+OVERWRITE = True
 
 BATCH_SIZE = 100
-EXPORT_FILENAME = "tweets_output.xlsx"
+EXPORT_FILENAME = "tweets_output.csv"
 
 STALE_SCROLL_THRESHOLD = 5
 
@@ -87,7 +87,7 @@ def scrape_tweet(username: str, start_date: datetime, end_date: datetime = None)
 
             # 🧾 Export if batch is full
             if not OVERWRITE and len(tweets_batch) >= BATCH_SIZE:
-                    export_to_excel(tweets_batch, filename=EXPORT_FILENAME, overwrite=False)
+                    export_to_csv(tweets_batch, filename=EXPORT_FILENAME, overwrite=False)
                     tweets_batch.clear()
 
             # Check if any new tweets appeared
@@ -112,10 +112,10 @@ def scrape_tweet(username: str, start_date: datetime, end_date: datetime = None)
         if tweets_batch:
             if OVERWRITE:
                 # When overwrite=True, export all tweets once (combine all batches)
-                export_to_excel(list(tweets_data.values()), filename=EXPORT_FILENAME, overwrite=True)
+                export_to_csv(list(tweets_data.values()), filename=EXPORT_FILENAME, overwrite=True)
             else:
                 # When overwrite=False, export remaining batch incrementally
-                export_to_excel(tweets_batch, filename=EXPORT_FILENAME, overwrite=False)
+                export_to_csv(tweets_batch, filename=EXPORT_FILENAME, overwrite=False)
 
         print(f"✅ Scraped {len(tweets_data)} tweets.")
         browser.close()
@@ -180,7 +180,7 @@ def extract_tweets(count, tweets, tweets_data, cutoff_date):
 if __name__ == "__main__":
     year = 2023
     while year < 2026:
-        month = 1
+        month = 7
         while month < 13:
             day = 1
             while day <= 30:
@@ -201,7 +201,9 @@ if __name__ == "__main__":
                     end_date=datetime(end_year, end_month, end_day)#6, 11, 21, 26, 31
                 )
                 day +=5
-                time.sleep(random.randint(120, 180))
+                sleep_time = random.randint(120, 180)
+                print(f"going to sleep for {sleep_time} seconds")
+                time.sleep(sleep_time)
             month += 1
             analyse_date_ranges()
         year += 1

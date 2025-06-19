@@ -1,8 +1,7 @@
 import os
 import pandas as pd
-from openpyxl import load_workbook
 
-def export_to_excel(tweets_data, filename="tweets_output.xlsx", overwrite=True):
+def export_to_csv(tweets_data, filename="tweets_output.csv", overwrite=True):
     try:
         flattened = []
 
@@ -46,16 +45,14 @@ def export_to_excel(tweets_data, filename="tweets_output.xlsx", overwrite=True):
         new_df = pd.DataFrame(flattened)
         new_df['id'] = new_df['id'].astype(str).str.strip()
 
-        sheet_name = "scraped_data"
-
         if os.path.exists(filename):
             try:
-                existing_df = pd.read_excel(filename, sheet_name=sheet_name)
+                existing_df = pd.read_csv(filename)
                 existing_df['id'] = existing_df['id'].astype(str).str.strip()
 
                 if overwrite:
-                    existing_df.set_index('id', inplace=True)
-                    new_df.set_index('id', inplace=True)
+                    existing_df.set_index("id", inplace=True)
+                    new_df.set_index("id", inplace=True)
                     existing_df.update(new_df)
                     combined_df = pd.concat([
                         existing_df,
@@ -65,25 +62,19 @@ def export_to_excel(tweets_data, filename="tweets_output.xlsx", overwrite=True):
                     print(f"🔁 Updated {filename} with {len(new_df)} records (by ID).")
                 else:
                     combined_df = pd.concat([existing_df, new_df], ignore_index=True)
-                    combined_df.drop_duplicates(subset='id', keep='last', inplace=True)
+                    combined_df.drop_duplicates(subset="id", keep="last", inplace=True)
                     print(f"➕ Appended {len(new_df)} records to {filename} (deduplicated).")
 
             except Exception as e:
-                print(f"⚠️ Failed to read or update existing Excel file: {e}")
+                print(f"⚠️ Failed to read or update existing CSV file: {e}")
                 combined_df = new_df
         else:
             combined_df = new_df
             print(f"🆕 Created new file {filename} with {len(new_df)} records.")
 
-        # ✅ Use ExcelWriter with mode="a" to preserve other sheets
-        if os.path.exists(filename):
-            with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
-        else:
-            with pd.ExcelWriter(filename, engine='openpyxl') as writer:
-                combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-        print(f"✅ Exported to {filename} (only updated '{sheet_name}' sheet)")
+        # 🔄 Write final result
+        combined_df.to_csv(filename, index=False)
+        print(f"✅ Exported to {filename}")
 
     except PermissionError:
-        print(f"❌ File '{filename}' is open in Excel. Please close it and try again.")
+        print(f"❌ File '{filename}' is open. Please close it and try again.")

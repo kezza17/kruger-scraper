@@ -1,5 +1,5 @@
 import re
-import string
+from text_utils import find_phrase
 
 activities = {
     "otm": ["on the move with kill", "otm", "on the move", "moving", "on the moove", "on the mpve"],
@@ -241,21 +241,6 @@ def extract_description_fields(description):
     matched = {"quantity": None, "species": None, "activity": None}
     unmatched = []
 
-    def normalize(text):
-        # Replace dashes and slashes with space, remove other punctuation
-        text = text.lower().replace("-", " ").replace("/", " ").replace("'", "")
-        text = text.translate(str.maketrans('', '', string.punctuation))
-        return f" {text} "
-
-    def find_phrase(lookup):
-        desc_norm = normalize(desc)
-        for key, phrases in lookup.items():
-            for phrase in phrases:
-                # pad with spaces to prevent partial matches
-                if f" {phrase} " in f" {desc_norm} ":
-                    return key, phrase
-        return None, None
-
     # 1. Quantity: handle "X plus" -> "X+" first
     plus_match = re.search(r'\b(\d+)\s+plus\b', desc, re.IGNORECASE)
     if plus_match:
@@ -269,19 +254,19 @@ def extract_description_fields(description):
             matched["quantity"] = quantity_match.group()
             desc = desc.replace(matched["quantity"], "")
         else:
-            key, phrase = find_phrase(quantities)
+            key, phrase = find_phrase(quantities, desc)
             if key:
                 matched["quantity"] = key
                 desc = desc.replace(phrase, "")
 
     # 2. Species
-    key, phrase = find_phrase(species)
+    key, phrase = find_phrase(species, desc)
     if key:
         matched["species"] = key
         desc = desc.replace(phrase, "")
 
     # 3. Activity
-    key, phrase = find_phrase(activities)
+    key, phrase = find_phrase(activities, desc)
     if key:
         matched["activity"] = key
         desc = desc.replace(phrase, "")

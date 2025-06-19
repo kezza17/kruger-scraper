@@ -1,8 +1,8 @@
 import pandas as pd
 
-def analyse_date_ranges(filename="tweets_output.xlsx", sheet_name="scraped_data"):
+def analyse_date_ranges(filename="tweets_output.csv"):
     try:
-        df = pd.read_excel(filename, sheet_name=sheet_name)
+        df = pd.read_csv(filename)
         if "date" not in df.columns:
             print("❌ 'date' column not found in the Excel file.")
             return
